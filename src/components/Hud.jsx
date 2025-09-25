@@ -7,7 +7,9 @@ const hearts = (count) =>
     </span>
   ));
 
-export default function Hud({ stats, typedPreview, isPaused }) {
+
+export default function Hud({ stats, typedPreview, gamePhase }) {
+
   return (
     <header className="relative z-20 border-b border-white/10 bg-black/40 px-6 py-5 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -56,14 +58,13 @@ export default function Hud({ stats, typedPreview, isPaused }) {
               <span className="text-white/50">{typedPreview.remaining}</span>
             </p>
           ) : (
-            <p className="mt-1 text-sm text-white/50">
-              Chọn một con cá mập bằng cách gõ ký tự đầu tiên của từ.
-            </p>
+
+            <div className="mt-3 h-6" aria-hidden="true" />
           )}
         </div>
         <div className="hidden text-right text-xs text-white/50 sm:block">
-          <p>Esc: tạm dừng &bull; Backspace: xóa &bull; Enter: bắt đầu lại</p>
-          {isPaused && <p className="mt-1 text-kelp">Đang tạm dừng…</p>}
+          {gamePhase === 'paused' && <p className="text-kelp">Đang tạm dừng…</p>}
+
         </div>
       </div>
     </header>
@@ -81,5 +82,7 @@ Hud.propTypes = {
     completed: PropTypes.string.isRequired,
     remaining: PropTypes.string.isRequired,
   }).isRequired,
-  isPaused: PropTypes.bool.isRequired,
+
+  gamePhase: PropTypes.oneOf(['start', 'playing', 'paused', 'gameover']).isRequired,
+
 };

@@ -7,12 +7,14 @@ const END_X = -32;
 
 const createWordPanel = () => {
   const canvas = document.createElement('canvas');
+
   canvas.width = 512;
   canvas.height = 256;
   const context = canvas.getContext('2d');
   const texture = new THREE.CanvasTexture(canvas);
   texture.encoding = THREE.sRGBEncoding;
   texture.anisotropy = 8;
+
   const material = new THREE.MeshBasicMaterial({
     map: texture,
     transparent: true,
@@ -21,7 +23,9 @@ const createWordPanel = () => {
   });
   const plane = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 1.8), material);
   plane.position.set(0.5, 0.2, 1.25);
+
   plane.rotation.y = Math.PI / 2;
+
   plane.renderOrder = 5;
   plane.userData = {
     canvas,
@@ -58,7 +62,9 @@ const updateWordPanel = (panel, shark, isTarget) => {
   context.fillStyle = isTarget ? 'rgba(255, 147, 79, 0.65)' : 'rgba(5, 28, 52, 0.65)';
   context.fillRect(0, 0, canvas.width, canvas.height);
 
+
   context.font = 'bold 96px "Be Vietnam Pro", "Noto Sans", sans-serif';
+
   context.textAlign = 'left';
   context.textBaseline = 'middle';
 
@@ -242,6 +248,9 @@ export default function OceanScene({ sharks, targetId }) {
   const sharkMeshesRef = useRef(new Map());
   const hunterRef = useRef();
 
+  const cameraRef = useRef();
+
+
   useEffect(() => {
     const mount = mountRef.current;
     const width = mount.clientWidth || window.innerWidth;
@@ -256,12 +265,17 @@ export default function OceanScene({ sharks, targetId }) {
     camera.position.set(0, 8, 26);
     camera.lookAt(0, 5, 0);
 
+    cameraRef.current = camera;
+
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 3));
     renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
+
     mount.appendChild(renderer.domElement);
 
     const hemiLight = new THREE.HemisphereLight(0x6bd4ff, 0x032744, 0.6);
@@ -305,6 +319,7 @@ export default function OceanScene({ sharks, targetId }) {
     hunterRef.current = hunter;
 
 
+
     const clock = new THREE.Clock();
     const animate = () => {
       const elapsed = clock.getElapsedTime();
@@ -319,6 +334,8 @@ export default function OceanScene({ sharks, targetId }) {
           }
         });
       }
+
+
 
       if (hunterRef.current) {
         hunterRef.current.position.y = 2.4 + Math.sin(elapsed * 1.4) * 0.35;
@@ -391,7 +408,13 @@ export default function OceanScene({ sharks, targetId }) {
       mesh.rotation.z = Math.sin(shark.wobbleSeed + shark.progress * 4) * 0.12;
       if (mesh.userData.textPanel) {
         updateWordPanel(mesh.userData.textPanel, shark, targetId === shark.id);
-        mesh.userData.textPanel.position.y = 0.2 + Math.cos(shark.wobbleSeed + shark.progress * 6) * 0.1;
+
+        const panel = mesh.userData.textPanel;
+        panel.position.y = 0.2 + Math.cos(shark.wobbleSeed + shark.progress * 6) * 0.1;
+        if (cameraRef.current) {
+          panel.quaternion.copy(cameraRef.current.quaternion);
+          panel.rotateY(Math.PI);
+        }
       }
 
     });

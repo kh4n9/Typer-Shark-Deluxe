@@ -338,55 +338,55 @@ export default function App() {
 
   return (
     <div className="relative flex min-h-screen flex-col">
-      <Hud
-        stats={stats}
-        typedPreview={typedPreview}
-        isPaused={gamePhase !== 'playing'}
-      />
+      <Hud stats={stats} typedPreview={typedPreview} gamePhase={gamePhase} />
       <main className="relative flex flex-1 flex-col">
         <OceanScene sharks={sharks} targetId={targetId} />
-        <section className="relative z-10 bg-black/20 px-6 py-12 backdrop-blur-lg">
-          <div className="mx-auto max-w-4xl space-y-6 text-base leading-relaxed">
-            <h2 className="font-heading text-3xl font-bold text-kelp">
-              Nhiệm vụ thợ săn kho báu
-            </h2>
-            <p>
-              Gõ chính xác từng từ tiếng Việt để phóng lao âm thanh vào bầy cá mập
-              3D đang lao đến. Càng nhiều combo, điểm thưởng càng lớn và tốc độ ra
-              quân càng nhanh!
-            </p>
-            <div className="grid gap-6 md:grid-cols-3">
-              <article className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-hud">
-                <h3 className="font-heading text-xl font-semibold text-coral">
-                  Điều khiển
-                </h3>
-                <ul className="mt-3 space-y-1 text-sm">
-                  <li>Gõ ký tự có dấu chính xác.</li>
-                  <li>Backspace để xóa, Esc để tạm dừng.</li>
-                  <li>Enter để bắt đầu hoặc chơi lại.</li>
-                </ul>
-              </article>
-              <article className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-hud">
-                <h3 className="font-heading text-xl font-semibold text-coral">
-                  Lưu ý</h3>
-                <ul className="mt-3 space-y-1 text-sm">
-                  <li>Combo cao mở khóa cấp độ mới.</li>
-                  <li>Đừng để cá mập chạm vào tàu!</li>
-                  <li>Chế độ giảm chuyển động được hỗ trợ.</li>
-                </ul>
-              </article>
-              <article className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-hud">
-                <h3 className="font-heading text-xl font-semibold text-coral">
-                  Bối cảnh</h3>
-                <p className="mt-3 text-sm">
-                  Hành trình lấy cảm hứng từ Typer Shark Deluxe, nay tái sinh với giao
-                  diện React, Three.js và Tailwind CSS để mang đại dương vào trình
-                  duyệt của bạn.
-                </p>
-              </article>
+        {gamePhase !== 'playing' && (
+          <section className="relative z-10 bg-black/20 px-6 py-12 backdrop-blur-lg">
+            <div className="mx-auto max-w-4xl space-y-6 text-base leading-relaxed">
+              <h2 className="font-heading text-3xl font-bold text-kelp">
+                Nhiệm vụ thợ săn kho báu
+              </h2>
+              <p>
+                Gõ chính xác từng từ tiếng Việt để phóng lao âm thanh vào bầy cá mập
+                3D đang lao đến. Càng nhiều combo, điểm thưởng càng lớn và tốc độ ra
+                quân càng nhanh!
+              </p>
+              <div className="grid gap-6 md:grid-cols-3">
+                <article className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-hud">
+                  <h3 className="font-heading text-xl font-semibold text-coral">
+                    Điều khiển
+                  </h3>
+                  <ul className="mt-3 space-y-1 text-sm">
+                    <li>Gõ ký tự có dấu chính xác.</li>
+                    <li>Backspace để xóa, Esc để tạm dừng.</li>
+                    <li>Enter để bắt đầu hoặc chơi lại.</li>
+                  </ul>
+                </article>
+                <article className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-hud">
+                  <h3 className="font-heading text-xl font-semibold text-coral">
+                    Lưu ý
+                  </h3>
+                  <ul className="mt-3 space-y-1 text-sm">
+                    <li>Combo cao mở khóa cấp độ mới.</li>
+                    <li>Đừng để cá mập chạm vào tàu!</li>
+                    <li>Chế độ giảm chuyển động được hỗ trợ.</li>
+                  </ul>
+                </article>
+                <article className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-hud">
+                  <h3 className="font-heading text-xl font-semibold text-coral">
+                    Bối cảnh
+                  </h3>
+                  <p className="mt-3 text-sm">
+                    Hành trình lấy cảm hứng từ Typer Shark Deluxe, nay tái sinh với
+                    giao diện React, Three.js và Tailwind CSS để mang đại dương vào
+                    trình duyệt của bạn.
+                  </p>
+                </article>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
       </main>
 
       {gamePhase === 'start' && (
