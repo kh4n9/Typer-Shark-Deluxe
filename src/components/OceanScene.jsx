@@ -137,6 +137,7 @@ const createSharkMesh = () => {
 
   group.userData.materials = materials;
   group.userData.textPanel = panel;
+
   group.castShadow = true;
 
   return group;
@@ -164,6 +165,7 @@ const disposeObject = (object) => {
         child.material.dispose();
       }
     }
+
     if (child.userData && child.userData.textPanel && child.userData.textPanel.material) {
       const { textPanel } = child.userData;
       if (textPanel.material.map) {
@@ -302,6 +304,7 @@ export default function OceanScene({ sharks, targetId }) {
     scene.add(hunter);
     hunterRef.current = hunter;
 
+
     const clock = new THREE.Clock();
     const animate = () => {
       const elapsed = clock.getElapsedTime();
@@ -316,10 +319,12 @@ export default function OceanScene({ sharks, targetId }) {
           }
         });
       }
+
       if (hunterRef.current) {
         hunterRef.current.position.y = 2.4 + Math.sin(elapsed * 1.4) * 0.35;
         hunterRef.current.rotation.y = Math.sin(elapsed * 0.6) * 0.1;
       }
+
       renderer.render(scene, camera);
       animationRef.current = requestAnimationFrame(animate);
     };
@@ -378,6 +383,7 @@ export default function OceanScene({ sharks, targetId }) {
         material.color.setHSL(0.58 - ratio * 0.3, 0.85, 0.55 + ratio * 0.2);
         material.emissiveIntensity = targetId === shark.id ? 0.6 : 0.22;
       });
+
       const x = THREE.MathUtils.lerp(START_X, END_X, shark.progress);
       const verticalBob = Math.sin(shark.wobbleSeed + shark.progress * 5) * 0.6;
       mesh.position.set(x, shark.lane + verticalBob, Math.sin(shark.wobbleSeed) * 1.2);
@@ -387,6 +393,7 @@ export default function OceanScene({ sharks, targetId }) {
         updateWordPanel(mesh.userData.textPanel, shark, targetId === shark.id);
         mesh.userData.textPanel.position.y = 0.2 + Math.cos(shark.wobbleSeed + shark.progress * 6) * 0.1;
       }
+
     });
   }, [sharks, targetId]);
 
