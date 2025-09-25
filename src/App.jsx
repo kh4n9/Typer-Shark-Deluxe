@@ -114,10 +114,10 @@ export default function App() {
       lane,
       wobbleSeed,
       progress: 0,
-      speed: 0.18 + level * 0.03 + Math.random() * 0.04,
+      speed: 0.1 + level * 0.02 + Math.random() * 0.025,
     };
     updateSharksState((current) => [...current, newShark]);
-    spawnTimerRef.current = Math.max(1.65 - level * 0.15, 0.6) + Math.random() * 0.4;
+    spawnTimerRef.current = Math.max(2.3 - level * 0.18, 1.2) + Math.random() * 0.6;
   }, [updateSharksState]);
 
   const handleSharkEscape = useCallback((escapedId) => {

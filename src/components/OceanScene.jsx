@@ -8,12 +8,14 @@ const END_X = -32;
 const createWordPanel = () => {
   const canvas = document.createElement('canvas');
 
-  canvas.width = 512;
-  canvas.height = 256;
+  canvas.width = 1024;
+  canvas.height = 512;
   const context = canvas.getContext('2d');
   const texture = new THREE.CanvasTexture(canvas);
   texture.encoding = THREE.sRGBEncoding;
-  texture.anisotropy = 8;
+  texture.anisotropy = 16;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
 
   const material = new THREE.MeshBasicMaterial({
     map: texture,
@@ -23,8 +25,6 @@ const createWordPanel = () => {
   });
   const plane = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 1.8), material);
   plane.position.set(0.5, 0.2, 1.25);
-
-  plane.rotation.y = Math.PI / 2;
 
   plane.renderOrder = 5;
   plane.userData = {
@@ -63,7 +63,7 @@ const updateWordPanel = (panel, shark, isTarget) => {
   context.fillRect(0, 0, canvas.width, canvas.height);
 
 
-  context.font = 'bold 96px "Be Vietnam Pro", "Noto Sans", sans-serif';
+  context.font = 'bold 188px "Be Vietnam Pro", "Noto Sans", sans-serif';
 
   context.textAlign = 'left';
   context.textBaseline = 'middle';
@@ -319,7 +319,6 @@ export default function OceanScene({ sharks, targetId }) {
     hunterRef.current = hunter;
 
 
-
     const clock = new THREE.Clock();
     const animate = () => {
       const elapsed = clock.getElapsedTime();
@@ -334,8 +333,6 @@ export default function OceanScene({ sharks, targetId }) {
           }
         });
       }
-
-
 
       if (hunterRef.current) {
         hunterRef.current.position.y = 2.4 + Math.sin(elapsed * 1.4) * 0.35;
