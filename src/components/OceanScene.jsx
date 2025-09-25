@@ -7,14 +7,14 @@ const END_X = -32;
 
 const createWordPanel = () => {
   const canvas = document.createElement('canvas');
-  canvas.width = 1024;
-  canvas.height = 512;
+
+  canvas.width = 512;
+  canvas.height = 256;
   const context = canvas.getContext('2d');
   const texture = new THREE.CanvasTexture(canvas);
   texture.encoding = THREE.sRGBEncoding;
-  texture.anisotropy = 16;
-  texture.minFilter = THREE.LinearMipmapLinearFilter;
-  texture.magFilter = THREE.LinearFilter;
+  texture.anisotropy = 8;
+
   const material = new THREE.MeshBasicMaterial({
     map: texture,
     transparent: true,
@@ -23,6 +23,9 @@ const createWordPanel = () => {
   });
   const plane = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 1.8), material);
   plane.position.set(0.5, 0.2, 1.25);
+
+  plane.rotation.y = Math.PI / 2;
+
   plane.renderOrder = 5;
   plane.userData = {
     canvas,
@@ -59,7 +62,9 @@ const updateWordPanel = (panel, shark, isTarget) => {
   context.fillStyle = isTarget ? 'rgba(255, 147, 79, 0.65)' : 'rgba(5, 28, 52, 0.65)';
   context.fillRect(0, 0, canvas.width, canvas.height);
 
-  context.font = 'bold 188px "Be Vietnam Pro", "Noto Sans", sans-serif';
+
+  context.font = 'bold 96px "Be Vietnam Pro", "Noto Sans", sans-serif';
+
   context.textAlign = 'left';
   context.textBaseline = 'middle';
 
@@ -138,6 +143,7 @@ const createSharkMesh = () => {
 
   group.userData.materials = materials;
   group.userData.textPanel = panel;
+
   group.castShadow = true;
 
   return group;
@@ -165,6 +171,7 @@ const disposeObject = (object) => {
         child.material.dispose();
       }
     }
+
     if (child.userData && child.userData.textPanel && child.userData.textPanel.material) {
       const { textPanel } = child.userData;
       if (textPanel.material.map) {
@@ -240,7 +247,9 @@ export default function OceanScene({ sharks, targetId }) {
   const bubblesRef = useRef();
   const sharkMeshesRef = useRef(new Map());
   const hunterRef = useRef();
+
   const cameraRef = useRef();
+
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -255,6 +264,7 @@ export default function OceanScene({ sharks, targetId }) {
     const camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 200);
     camera.position.set(0, 8, 26);
     camera.lookAt(0, 5, 0);
+
     cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -265,6 +275,7 @@ export default function OceanScene({ sharks, targetId }) {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.1;
+
     mount.appendChild(renderer.domElement);
 
     const hemiLight = new THREE.HemisphereLight(0x6bd4ff, 0x032744, 0.6);
@@ -307,6 +318,8 @@ export default function OceanScene({ sharks, targetId }) {
     scene.add(hunter);
     hunterRef.current = hunter;
 
+
+
     const clock = new THREE.Clock();
     const animate = () => {
       const elapsed = clock.getElapsedTime();
@@ -321,10 +334,14 @@ export default function OceanScene({ sharks, targetId }) {
           }
         });
       }
+
+
+
       if (hunterRef.current) {
         hunterRef.current.position.y = 2.4 + Math.sin(elapsed * 1.4) * 0.35;
         hunterRef.current.rotation.y = Math.sin(elapsed * 0.6) * 0.1;
       }
+
       renderer.render(scene, camera);
       animationRef.current = requestAnimationFrame(animate);
     };
@@ -383,6 +400,7 @@ export default function OceanScene({ sharks, targetId }) {
         material.color.setHSL(0.58 - ratio * 0.3, 0.85, 0.55 + ratio * 0.2);
         material.emissiveIntensity = targetId === shark.id ? 0.6 : 0.22;
       });
+
       const x = THREE.MathUtils.lerp(START_X, END_X, shark.progress);
       const verticalBob = Math.sin(shark.wobbleSeed + shark.progress * 5) * 0.6;
       mesh.position.set(x, shark.lane + verticalBob, Math.sin(shark.wobbleSeed) * 1.2);
@@ -390,6 +408,7 @@ export default function OceanScene({ sharks, targetId }) {
       mesh.rotation.z = Math.sin(shark.wobbleSeed + shark.progress * 4) * 0.12;
       if (mesh.userData.textPanel) {
         updateWordPanel(mesh.userData.textPanel, shark, targetId === shark.id);
+
         const panel = mesh.userData.textPanel;
         panel.position.y = 0.2 + Math.cos(shark.wobbleSeed + shark.progress * 6) * 0.1;
         if (cameraRef.current) {
@@ -397,6 +416,7 @@ export default function OceanScene({ sharks, targetId }) {
           panel.rotateY(Math.PI);
         }
       }
+
     });
   }, [sharks, targetId]);
 
