@@ -4,7 +4,7 @@ import OceanScene from './components/OceanScene.jsx';
 import Overlay from './components/Overlay.jsx';
 
 const MAX_LIVES = 5;
-const LANES = [-10, 0, 10];
+const LANES = [-6, 0, 6];
 
 const WORD_BANK = {
   easy: [

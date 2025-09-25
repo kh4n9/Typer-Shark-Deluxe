@@ -2,8 +2,85 @@ import { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import * as THREE from 'three';
 
-const FAR_Z = -90;
-const NEAR_Z = 10;
+const START_X = 34;
+const END_X = -32;
+
+const createWordPanel = () => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 256;
+  const context = canvas.getContext('2d');
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.encoding = THREE.sRGBEncoding;
+  texture.anisotropy = 8;
+  const material = new THREE.MeshBasicMaterial({
+    map: texture,
+    transparent: true,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 1.8), material);
+  plane.position.set(0.5, 0.2, 1.25);
+  plane.rotation.y = Math.PI / 2;
+  plane.renderOrder = 5;
+  plane.userData = {
+    canvas,
+    context,
+    texture,
+    lastWord: '',
+    lastTyped: '',
+    lastTarget: false,
+  };
+  return plane;
+};
+
+const updateWordPanel = (panel, shark, isTarget) => {
+  const data = panel.userData;
+  if (!data || !data.context) {
+    return;
+  }
+
+  if (
+    data.lastWord === shark.word &&
+    data.lastTyped === shark.typed &&
+    data.lastTarget === isTarget
+  ) {
+    return;
+  }
+
+  data.lastWord = shark.word;
+  data.lastTyped = shark.typed;
+  data.lastTarget = isTarget;
+
+  const { canvas, context, texture } = data;
+  context.clearRect(0, 0, canvas.width, canvas.height);
+
+  context.fillStyle = isTarget ? 'rgba(255, 147, 79, 0.65)' : 'rgba(5, 28, 52, 0.65)';
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+  context.font = 'bold 96px "Be Vietnam Pro", "Noto Sans", sans-serif';
+  context.textAlign = 'left';
+  context.textBaseline = 'middle';
+
+  const typed = shark.word.slice(0, shark.typed.length);
+  const remaining = shark.word.slice(shark.typed.length);
+
+  const totalMetrics = context.measureText(shark.word);
+  const typedMetrics = context.measureText(typed);
+  const startX = (canvas.width - totalMetrics.width) / 2;
+  const y = canvas.height / 2 + 8;
+
+  context.fillStyle = '#ffe0b8';
+  context.fillText(typed, startX, y);
+  context.fillStyle = '#ffffff';
+  context.fillText(remaining, startX + typedMetrics.width, y);
+
+  context.lineWidth = 8;
+  context.strokeStyle = isTarget ? 'rgba(255, 208, 79, 0.8)' : 'rgba(73, 185, 255, 0.45)';
+  context.strokeRect(18, 18, canvas.width - 36, canvas.height - 36);
+
+  texture.needsUpdate = true;
+};
 
 const createSharkMesh = () => {
   const group = new THREE.Group();
@@ -55,13 +132,30 @@ const createSharkMesh = () => {
   group.add(tail);
   materials.push(tail.material);
 
+  const panel = createWordPanel();
+  group.add(panel);
+
   group.userData.materials = materials;
+  group.userData.textPanel = panel;
+
   group.castShadow = true;
 
   return group;
 };
 
 const disposeObject = (object) => {
+  if (object.userData && object.userData.textPanel && object.userData.textPanel.material) {
+    const { textPanel } = object.userData;
+    if (textPanel.material.map) {
+      textPanel.material.map.dispose();
+    }
+    if (textPanel.material) {
+      textPanel.material.dispose();
+    }
+    if (textPanel.geometry) {
+      textPanel.geometry.dispose();
+    }
+  }
   object.traverse((child) => {
     if (child.isMesh) {
       child.geometry.dispose();
@@ -71,7 +165,72 @@ const disposeObject = (object) => {
         child.material.dispose();
       }
     }
+
+    if (child.userData && child.userData.textPanel && child.userData.textPanel.material) {
+      const { textPanel } = child.userData;
+      if (textPanel.material.map) {
+        textPanel.material.map.dispose();
+      }
+      if (textPanel.material) {
+        textPanel.material.dispose();
+      }
+      if (textPanel.geometry) {
+        textPanel.geometry.dispose();
+      }
+    }
   });
+};
+
+const createHunterMesh = () => {
+  const group = new THREE.Group();
+
+  const suitMaterial = new THREE.MeshStandardMaterial({
+    color: 0x1d2f4f,
+    roughness: 0.3,
+    metalness: 0.15,
+    emissive: 0x0d1a2d,
+    emissiveIntensity: 0.3,
+  });
+
+  const helmetMaterial = new THREE.MeshStandardMaterial({
+    color: 0xd7e8ff,
+    roughness: 0.15,
+    metalness: 0.6,
+    emissive: 0x1c3454,
+    emissiveIntensity: 0.45,
+  });
+
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(1.4, 3.6, 14, 24), suitMaterial);
+  body.position.y = 3.2;
+  group.add(body);
+
+  const helmet = new THREE.Mesh(new THREE.SphereGeometry(1.4, 24, 24), helmetMaterial);
+  helmet.position.set(0, 5.4, 0);
+  group.add(helmet);
+
+  const visor = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 0.95, 1.2, 24), helmetMaterial.clone());
+  visor.position.set(0.9, 5.4, 0);
+  visor.rotation.z = Math.PI / 2;
+  visor.material.opacity = 0.75;
+  visor.material.transparent = true;
+  group.add(visor);
+
+  const spear = new THREE.Group();
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 8, 12), new THREE.MeshStandardMaterial({ color: 0xc1c8cf }));
+  shaft.rotation.z = Math.PI / 2;
+  spear.add(shaft);
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.45, 1.4, 16), new THREE.MeshStandardMaterial({ color: 0xffd04f, metalness: 0.8, roughness: 0.2 }));
+  tip.position.set(4.4, 0, 0);
+  tip.rotation.z = Math.PI / 2;
+  spear.add(tip);
+  spear.position.set(-1.2, 3.6, 0);
+  spear.rotation.set(0.1, 0, Math.PI / 6);
+  group.add(spear);
+
+  group.position.set(END_X - 6, 2.4, 0);
+  group.scale.set(1.1, 1.1, 1.1);
+
+  return group;
 };
 
 export default function OceanScene({ sharks, targetId }) {
@@ -81,6 +240,7 @@ export default function OceanScene({ sharks, targetId }) {
   const waterRef = useRef();
   const bubblesRef = useRef();
   const sharkMeshesRef = useRef(new Map());
+  const hunterRef = useRef();
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -140,6 +300,11 @@ export default function OceanScene({ sharks, targetId }) {
     scene.add(bubbleGroup);
     bubblesRef.current = bubbleGroup;
 
+    const hunter = createHunterMesh();
+    scene.add(hunter);
+    hunterRef.current = hunter;
+
+
     const clock = new THREE.Clock();
     const animate = () => {
       const elapsed = clock.getElapsedTime();
@@ -154,6 +319,12 @@ export default function OceanScene({ sharks, targetId }) {
           }
         });
       }
+
+      if (hunterRef.current) {
+        hunterRef.current.position.y = 2.4 + Math.sin(elapsed * 1.4) * 0.35;
+        hunterRef.current.rotation.y = Math.sin(elapsed * 0.6) * 0.1;
+      }
+
       renderer.render(scene, camera);
       animationRef.current = requestAnimationFrame(animate);
     };
@@ -212,11 +383,17 @@ export default function OceanScene({ sharks, targetId }) {
         material.color.setHSL(0.58 - ratio * 0.3, 0.85, 0.55 + ratio * 0.2);
         material.emissiveIntensity = targetId === shark.id ? 0.6 : 0.22;
       });
-      const z = THREE.MathUtils.lerp(FAR_Z, NEAR_Z, shark.progress);
-      const sway = Math.sin(shark.wobbleSeed + shark.progress * 6) * 2.2;
-      mesh.position.set(shark.lane + sway * 0.15, 2.6 + Math.sin(shark.wobbleSeed + shark.progress * 5) * 0.7, z);
+
+      const x = THREE.MathUtils.lerp(START_X, END_X, shark.progress);
+      const verticalBob = Math.sin(shark.wobbleSeed + shark.progress * 5) * 0.6;
+      mesh.position.set(x, shark.lane + verticalBob, Math.sin(shark.wobbleSeed) * 1.2);
       mesh.rotation.y = Math.PI;
-      mesh.rotation.z = Math.sin(shark.wobbleSeed + shark.progress * 4) * 0.15;
+      mesh.rotation.z = Math.sin(shark.wobbleSeed + shark.progress * 4) * 0.12;
+      if (mesh.userData.textPanel) {
+        updateWordPanel(mesh.userData.textPanel, shark, targetId === shark.id);
+        mesh.userData.textPanel.position.y = 0.2 + Math.cos(shark.wobbleSeed + shark.progress * 6) * 0.1;
+      }
+
     });
   }, [sharks, targetId]);
 
